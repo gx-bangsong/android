@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+
+  <remote name="gkui"
+          fetch="https://github.com/Project-GKUI/" />
+
+  <remove-project name="crdroidandroid/android_packages_apps_GameSpace" />
+  <project name="Project-GKUI/android_packages_apps_GameSpace"
+           path="packages/apps/GameSpace"
+           remote="gkui"
+           revision="16.0" />
+
+  <remove-project name="crdroidandroid/android_packages_apps_Messaging" />
+  <project name="Project-GKUI/android_packages_apps_Messaging"
+           path="packages/apps/Messaging"
+           remote="gkui"
+           revision="lineage-23.2" />
+
+  <remove-project name="LineageOS/android_packages_apps_Glimpse" />
+  <project name="Project-GKUI/android_packages_apps_Glimpse"
+           path="packages/apps/Glimpse"
+           remote="gkui"
+           revision="lineage-23.2" />
+
+  <remove-project name="LineageOS/android_packages_apps_ExactCalculator" />
+  <project name="Project-GKUI/android_packages_apps_ExactCalculator"
+           path="packages/apps/ExactCalculator"
+           remote="gkui"
+           revision="lineage-23.2" />
+
+  <remove-project name="LineageOS/android_packages_apps_Contacts" />
+  <project name="Project-GKUI/android_packages_apps_Contacts"
+           path="packages/apps/Contacts"
+           remote="gkui"
+           revision="lineage-23.2" />
+
+  <remove-project name="crdroidandroid/android_packages_apps_Dialer" />
+  <project name="Project-GKUI/android_packages_apps_Dialer"
+           path="packages/apps/Dialer"
+           remote="gkui"
+           revision="lineage-23.2" />
+
+  <remove-project name="LineageOS/android_packages_apps_Etar" />
+  <project name="Project-GKUI/android_packages_apps_Etar"
+           path="packages/apps/Etar"
+           remote="gkui"
+           revision="lineage-23.0" />
+
+  <remove-project name="LineageOS/android_packages_apps_DeskClock" />
+  <project name="Project-GKUI/android_packages_apps_DeskClock"
+           path="packages/apps/DeskClock"
+           remote="gkui"
+           revision="lineage-23.2" />
+
+</manifest>
