@@ -1,0 +1,106 @@
+name: Validate manifest XML
+on:
+  pull_request:
+    branches:
+      - "16.0"
+  push:
+    branches:
+      - "16.0"
+      - "arena/**"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  manifest-xml:
+    name: Validate manifest XML
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install xmllint
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libxml2-utils
+      - name: Validate XML syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(
+            default.xml
+            snippets/crdroid.xml
+            snippets/lineage.xml
+            snippets/gkui.xml
+            snippets/kernel-*.xml
+          )
+          for file in "${files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "Missing XML file: $file" >&2
+              exit 1
+            fi
+            echo "Checking $file"
+            xmllint --nonet --noout "$file"
+          done
+      - name: Validate GKUI manifest invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          expected_remove_names = {
+              "crdroidandroid/android_packages_apps_GameSpace",
+              "crdroidandroid/android_packages_apps_Messaging",
+              "LineageOS/android_packages_apps_Glimpse",
+              "LineageOS/android_packages_apps_ExactCalculator",
+              "LineageOS/android_packages_apps_Contacts",
+              "crdroidandroid/android_packages_apps_Dialer",
+              "LineageOS/android_packages_apps_Etar",
+              "LineageOS/android_packages_apps_DeskClock",
+          }
+          default_root = ET.parse("default.xml").getroot()
+          includes = [node.attrib.get("name") for node in default_root.findall("include")]
+          assert includes[-3:] == [
+              "snippets/gkui.xml",
+              "snippets/crdroid.xml",
+              "snippets/lineage.xml",
+          ], f"Unexpected include order: {includes[-3:]}"
+          gkui_root = ET.parse("snippets/gkui.xml").getroot()
+          remotes = gkui_root.findall("remote")
+          assert any(
+              remote.attrib.get("name") == "gkui"
+              and remote.attrib.get("fetch") == "https://github.com/Project-GKUI/"
+              for remote in remotes
+          ), "gkui remote is missing or incorrect"
+          remove_names = {
+              node.attrib["name"] for node in gkui_root.findall("remove-project")
+          }
+          projects = gkui_root.findall("project")
+          assert remove_names == expected_remove_names, (
+              f"Unexpected remove-project names: {sorted(remove_names)}"
+          )
+          assert len(projects) == len(remove_names) == 8
+          assert all(
+              node.attrib.get("name", "").startswith("Project-GKUI/")
+              and node.attrib.get("remote") == "gkui"
+              for node in projects
+          ), "Every GKUI project must use remote=\"gkui\""
+          text = Path("snippets/gkui.xml").read_text(encoding="utf-8")
+          assert "TODO" not in text, "TODO entries are not allowed in gkui.xml"
+          assert "Notes" not in text, "Notes must not be present in gkui.xml"
+          assert "YellowPage" not in text, "YellowPage must not be present in gkui.xml"
+          source_projects = []
+          for filename in (
+              "default.xml",
+              "snippets/crdroid.xml",
+              "snippets/lineage.xml",
+          ):
+              source_projects.extend(
+                  node.attrib.get("name")
+                  for node in ET.parse(filename).getroot().findall("project")
+              )
+          assert expected_remove_names.issubset(set(source_projects)), (
+              "At least one remove-project name is not present in the source snippets"
+          )
+          print("GKUI manifest invariants passed")
+          PY
+
